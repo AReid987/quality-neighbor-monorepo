@@ -1,0 +1,1 @@
+export interface User { id: string; email: string; name: string; role: 'admin' | 'user' | 'business'; } export interface ServiceListing { id: string; userId: string; title: string; description: string; category: string; type: 'offer' | 'request'; } export interface Comment { id: string; userId: string; content: string; timestamp: string; }
