@@ -1,71 +1,61 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { DashboardAuthProvider, useDashboardAuth } from "./auth0-provider";
+import { ReactNode } from "react";
+import { UserRole } from "@qn/auth";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'user';
-}
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
+// Re-export the Auth0 provider as AuthProvider for compatibility
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication - in production, this would call your API
-    const mockUsers = [
-      { id: '1', email: 'admin@qualityneighbor.com', password: 'admin123', name: 'Admin User', role: 'admin' as const },
-      { id: '2', email: 'user@example.com', password: 'user123', name: 'Regular User', role: 'user' as const }
-    ];
-
-    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      return true;
-    }
-    
-    return false;
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <DashboardAuthProvider>{children}</DashboardAuthProvider>;
 };
+
+// Re-export the hook as useAuth for compatibility with existing code
+export const useAuth = () => {
+  const auth = useDashboardAuth();
+
+  // Transform the Auth0 user format to match the expected interface
+  return {
+    user: auth.user
+      ? {
+          id: auth.user.sub,
+          name:
+            auth.user.name ||
+            auth.user.nickname ||
+            `${auth.user.given_name || ""} ${auth.user.family_name || ""}`.trim(),
+          role: auth.hasRole(UserRole.SUPER_ADMIN)
+            ? ("admin" as const)
+            : ("user" as const),
+          // Include additional Auth0 user properties
+          ...auth.user,
+        }
+      : null,
+    loading: auth.isLoading,
+    login: () => {
+      // Auth0 login doesn't use email/password directly
+      // Instead, redirect to Auth0 login page
+      auth.login();
+      return Promise.resolve(true);
+    },
+    logout: auth.logout,
+    // Additional Auth0 specific properties
+    currentProject: auth.currentProject,
+    setCurrentProject: auth.setCurrentProject,
+    availableProjects: auth.availableProjects,
+    hasRole: auth.hasRole,
+    hasProjectAccess: auth.hasProjectAccess,
+    isQNUser: auth.isQNUser,
+    isRLTRUser: auth.isRLTRUser,
+    updateUserMetadata: auth.updateUserMetadata,
+  };
+};
+
+// Export additional Auth0 components that might be needed
+export {
+  withAuth,
+  ProjectGuard,
+  RoleGuard,
+  useDashboardAuth,
+} from "./auth0-provider";
+
+// Export Auth0 types and enums
+export { UserRole, ProjectNamespace } from "@qn/auth";

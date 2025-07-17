@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -18,8 +19,19 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@qn/auth": ["../../packages/auth/src/index.ts"],
+      "@qn/auth/*": ["../../packages/auth/src/*"],
+      "@qn/database": ["../../packages/database/src/index.ts"],
+      "@qn/database/*": ["../../packages/database/src/*"],
+      "@qn/ui": ["../../packages/ui/src/index.ts"],
+      "@qn/ui/*": ["../../packages/ui/src/*"],
+      "@qn/types": ["../../packages/types/src/index.ts"],
+      "@qn/types/*": ["../../packages/types/src/*"],
+      "@qn/config": ["../../packages/config/src/index.ts"],
+      "@qn/config/*": ["../../packages/config/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

@@ -1,1 +1,24 @@
-{"name": "@qn/auth","version": "0.1.0","private": true,"main": "./src/index.ts","types": "./src/index.ts"}
+{
+  "name": "@qn/auth",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auth0/auth0-react": "^2.2.4",
+    "@auth0/nextjs-auth0": "^3.5.0",
+    "jose": "^5.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
+    "tsx": "^4.6.2",
+    "typescript": "^5.3.3"
+  }
+}
