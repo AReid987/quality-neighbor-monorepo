@@ -7,7 +7,12 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "deploy:dashboard": "./scripts/deploy-dashboard.sh"
+    "deploy:dashboard": "./scripts/deploy-dashboard.sh",
+    "db:migrate": "cd packages/database && npm run migrate",
+    "db:reset": "cd packages/database && npm run reset",
+    "db:seed": "cd packages/database && npm run seed",
+    "auth:test": "cd packages/auth && npm run type-check",
+    "test:supabase": "npx tsx scripts/test-supabase-setup.ts"
   },
   "devDependencies": {
     "next": "13.5.9",
