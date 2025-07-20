@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { NewsletterSignup } from "@/components/newsletter/NewsletterSignup";
 
 const FinalCTASection = () => {
   return (
@@ -25,9 +26,9 @@ const FinalCTASection = () => {
         </div>
         
         {/* CTA Button */}
-        <button className="bg-accent hover:bg-accent-hover text-accent-foreground font-inter font-bold text-lg px-8 py-4 rounded-lg shadow-lg transition-colors duration-300 mb-4">
-          Join Quality Neighbor Today
-        </button>
+        <div className="max-w-md mx-auto">
+          <NewsletterSignup className="bg-white/10 backdrop-blur-sm border-white/20" />
+        </div>
         
         {/* Microcopy */}
         <p className="font-inter text-sm text-primary-foreground opacity-80">

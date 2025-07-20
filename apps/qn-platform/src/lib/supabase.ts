@@ -17,9 +17,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Database types based on our schema
 export type Database = {
-  qn: {
+  public: {
     Tables: {
-      users: {
+      qn_users: {
         Row: {
           user_id: string
           email: string
@@ -60,7 +60,7 @@ export type Database = {
           updated_at?: string
         }
       }
-      businesses: {
+      qn_businesses: {
         Row: {
           business_id: string
           user_id: string
@@ -108,5 +108,5 @@ export type Database = {
   }
 }
 
-export type QNUser = Database['qn']['Tables']['users']['Row']
-export type QNBusiness = Database['qn']['Tables']['businesses']['Row']
+export type QNUser = Database['public']['Tables']['qn_users']['Row']
+export type QNBusiness = Database['public']['Tables']['qn_businesses']['Row']

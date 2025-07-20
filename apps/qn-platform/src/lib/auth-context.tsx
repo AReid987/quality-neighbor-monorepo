@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchQNUser = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('qn.users')
+        .from('qn_users')
         .select('*')
         .eq('user_id', userId)
         .single()
@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If successful and user is created, add to qn_users table
       if (data.user) {
         const { error: insertError } = await supabase
-          .from('qn.users')
+          .from('qn_users')
           .insert({
             user_id: data.user.id,
             email: email,
