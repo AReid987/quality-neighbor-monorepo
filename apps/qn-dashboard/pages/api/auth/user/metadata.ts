@@ -7,10 +7,10 @@ import { z } from "zod";
 // Validation schema for metadata updates
 const MetadataUpdateSchema = z
   .object({
-    preferences: z.record(z.any()).optional(),
+    preferences: z.record(z.string(), z.any()).optional(),
     onboarding_completed: z.boolean().optional(),
-    notification_settings: z.record(z.any()).optional(),
-    dashboard_settings: z.record(z.any()).optional(),
+    notification_settings: z.record(z.string(), z.any()).optional(),
+    dashboard_settings: z.record(z.string(), z.any()).optional(),
     projects: z.array(z.string()).optional(),
     roles: z.array(z.string()).optional(),
   })
@@ -37,7 +37,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!validationResult.success) {
       return res.status(400).json({
         error: "Invalid metadata format",
-        details: validationResult.error.errors,
+        details: validationResult.error.issues,
       });
     }
 

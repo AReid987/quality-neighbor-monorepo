@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse, NextApiHandler } from "next";
 import { getSession, withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { z } from "zod";
 import type { QNUser, UserRole, ProjectNamespace } from "./client";
@@ -199,13 +199,8 @@ export class Auth0Management {
 export const auth0Management = new Auth0Management();
 
 // Higher-order component for role-based access control
-export function requireRole(role: UserRole) {
-  return function (
-    handler: (
-      req: NextApiRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
-  ) {
+export function requireRole(role: UserRole): (handler: NextApiHandler) => NextApiHandler {
+  return function (handler: NextApiHandler): NextApiHandler {
     return withApiAuthRequired(
       async (req: NextApiRequest, res: NextApiResponse) => {
         const session = await getSession(req, res);
@@ -230,13 +225,8 @@ export function requireRole(role: UserRole) {
 }
 
 // Higher-order component for project-based access control
-export function requireProject(project: ProjectNamespace) {
-  return function (
-    handler: (
-      req: NextApiRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
-  ) {
+export function requireProject(project: ProjectNamespace): (handler: NextApiHandler) => NextApiHandler {
+  return function (handler: NextApiHandler): NextApiHandler {
     return withApiAuthRequired(
       async (req: NextApiRequest, res: NextApiResponse) => {
         const session = await getSession(req, res);

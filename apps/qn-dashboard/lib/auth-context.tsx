@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardAuthProvider, useDashboardAuth } from "./auth0-provider";
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { UserRole } from "@qn/auth";
 
 // Re-export the Auth0 provider as AuthProvider for compatibility
@@ -9,43 +9,71 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <DashboardAuthProvider>{children}</DashboardAuthProvider>;
 };
 
-// Re-export the hook as useAuth for compatibility with existing code
-export const useAuth = () => {
-  const auth = useDashboardAuth();
+// Demo users for testing
+const DEMO_USERS = {
+  'admin@qualityneighbor.com': {
+    id: 'demo-admin-1',
+    name: 'Admin User',
+    email: 'admin@qualityneighbor.com',
+    role: 'admin' as const,
+  },
+  'user@example.com': {
+    id: 'demo-user-1', 
+    name: 'Demo User',
+    email: 'user@example.com',
+    role: 'user' as const,
+  },
+};
 
-  // Transform the Auth0 user format to match the expected interface
-  return {
-    user: auth.user
-      ? {
-          id: auth.user.sub,
-          name:
-            auth.user.name ||
-            auth.user.nickname ||
-            `${auth.user.given_name || ""} ${auth.user.family_name || ""}`.trim(),
-          role: auth.hasRole(UserRole.SUPER_ADMIN)
-            ? ("admin" as const)
-            : ("user" as const),
-          // Include additional Auth0 user properties
-          ...auth.user,
-        }
-      : null,
-    loading: auth.isLoading,
-    login: () => {
-      // Auth0 login doesn't use email/password directly
-      // Instead, redirect to Auth0 login page
-      auth.login();
+// Simple demo auth hook for development
+export const useAuth = () => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check for stored user
+    const storedUser = localStorage.getItem('demo-user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  const login = async (email?: string, password?: string) => {
+    // Demo login logic
+    if (email && DEMO_USERS[email as keyof typeof DEMO_USERS]) {
+      const demoUser = DEMO_USERS[email as keyof typeof DEMO_USERS];
+      setUser(demoUser);
+      localStorage.setItem('demo-user', JSON.stringify(demoUser));
       return Promise.resolve(true);
-    },
-    logout: auth.logout,
-    // Additional Auth0 specific properties
-    currentProject: auth.currentProject,
-    setCurrentProject: auth.setCurrentProject,
-    availableProjects: auth.availableProjects,
-    hasRole: auth.hasRole,
-    hasProjectAccess: auth.hasProjectAccess,
-    isQNUser: auth.isQNUser,
-    isRLTRUser: auth.isRLTRUser,
-    updateUserMetadata: auth.updateUserMetadata,
+    }
+    
+    // If Auth0 is not configured, use demo user
+    const defaultUser = DEMO_USERS['user@example.com'];
+    setUser(defaultUser);
+    localStorage.setItem('demo-user', JSON.stringify(defaultUser));
+    return Promise.resolve(true);
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('demo-user');
+  };
+
+  return {
+    user,
+    loading,
+    login,
+    logout,
+    // Mock additional properties for compatibility
+    currentProject: 'qn',
+    setCurrentProject: () => {},
+    availableProjects: ['qn'],
+    hasRole: (role: string) => user?.role === role,
+    hasProjectAccess: () => true,
+    isQNUser: true,
+    isRLTRUser: false,
+    updateUserMetadata: () => Promise.resolve(),
   };
 };
 

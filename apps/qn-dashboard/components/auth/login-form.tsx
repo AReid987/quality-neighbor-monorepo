@@ -21,13 +21,14 @@ export const LoginForm = () => {
     setLoading(true);
     setError('');
 
-    const success = await login(email, password);
-    
-    if (!success) {
-      setError('Invalid credentials. Try admin@qualityneighbor.com / admin123');
+    try {
+      // Use demo login with email/password
+      await login(email, password);
+    } catch (error) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (

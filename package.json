@@ -8,6 +8,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "deploy:dashboard": "./scripts/deploy-dashboard.sh",
+    "deploy:platform": "./scripts/deploy-platform.sh",
     "db:migrate": "cd packages/database && npm run migrate",
     "db:reset": "cd packages/database && npm run reset",
     "db:seed": "cd packages/database && npm run seed",
