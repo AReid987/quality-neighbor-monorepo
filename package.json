@@ -16,7 +16,7 @@
     "test:supabase": "npx tsx scripts/test-supabase-setup.ts"
   },
   "devDependencies": {
-    "next": "13.5.9",
+    "next": "14.2.30",
     "prettier": "^3.6.2",
     "turbo": "^2.5.5",
     "typescript": "5.8.3"
