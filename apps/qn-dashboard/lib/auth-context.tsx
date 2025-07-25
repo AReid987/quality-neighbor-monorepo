@@ -40,19 +40,29 @@ export const useAuth = () => {
   }, []);
 
   const login = async (email?: string, password?: string) => {
-    // Demo login logic
+    console.log('Login attempt:', { email, password });
+    
+    // Check demo users first
     if (email && DEMO_USERS[email as keyof typeof DEMO_USERS]) {
       const demoUser = DEMO_USERS[email as keyof typeof DEMO_USERS];
+      console.log('Demo user found:', demoUser);
       setUser(demoUser);
       localStorage.setItem('demo-user', JSON.stringify(demoUser));
       return Promise.resolve(true);
     }
     
-    // If Auth0 is not configured, use demo user
-    const defaultUser = DEMO_USERS['user@example.com'];
-    setUser(defaultUser);
-    localStorage.setItem('demo-user', JSON.stringify(defaultUser));
-    return Promise.resolve(true);
+    // Check custom users from localStorage
+    const customUsers = JSON.parse(localStorage.getItem('custom-users') || '{}');
+    if (email && customUsers[email] && customUsers[email].password === password) {
+      const customUser = customUsers[email];
+      console.log('Custom user found:', customUser);
+      setUser(customUser);
+      localStorage.setItem('demo-user', JSON.stringify(customUser));
+      return Promise.resolve(true);
+    }
+    
+    console.log('No matching user found');
+    throw new Error('Invalid credentials');
   };
 
   const logout = () => {
@@ -60,11 +70,41 @@ export const useAuth = () => {
     localStorage.removeItem('demo-user');
   };
 
+  const signup = async (email: string, password: string, userData: any) => {
+    console.log('Signup attempt:', { email, userData });
+    
+    // Check if user already exists
+    const customUsers = JSON.parse(localStorage.getItem('custom-users') || '{}');
+    if (customUsers[email] || DEMO_USERS[email as keyof typeof DEMO_USERS]) {
+      throw new Error('User already exists');
+    }
+    
+    // Create new user
+    const newUser = {
+      id: Date.now().toString(),
+      email,
+      name: userData.name || 'New User',
+      role: userData.role || 'user',
+      password // In real app, this would be hashed
+    };
+    
+    // Save to localStorage
+    customUsers[email] = newUser;
+    localStorage.setItem('custom-users', JSON.stringify(customUsers));
+    
+    // Auto-login the new user
+    setUser(newUser);
+    localStorage.setItem('demo-user', JSON.stringify(newUser));
+    
+    return Promise.resolve(true);
+  };
+
   return {
     user,
     loading,
     login,
     logout,
+    signup,
     // Mock additional properties for compatibility
     currentProject: 'qn',
     setCurrentProject: () => {},

@@ -23,7 +23,14 @@ const AdminDashboard = dynamic(
 );
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading, login, signup } = useAuth();
+  const [showSignup, setShowSignup] = useState(false);
+  const [signupData, setSignupData] = useState({
+    email: '',
+    password: '',
+    name: '',
+    role: 'user'
+  });
   const [activeTab, setActiveTab] = useState<'guide' | 'admin' | 'dashboard'>('guide');
 
   if (loading) {
@@ -43,53 +50,126 @@ export default function Home() {
             <p className="text-gray-600">Dashboard Access</p>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Sign In</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your email"
-                  />
+            {!showSignup ? (
+              // Login Form
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Sign In</h2>
+                <div className="space-y-4">
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await login('admin@qualityneighbor.com', 'admin123');
+                        window.location.reload();
+                      } catch (error) {
+                        alert('Login failed: ' + (error as Error).message);
+                      }
+                    }}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Sign In (Demo Admin)
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await login('user@example.com', 'user123');
+                        window.location.reload();
+                      } catch (error) {
+                        alert('Login failed: ' + (error as Error).message);
+                      }
+                    }}
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Sign In (Demo User)
+                  </button>
+                  
+                  <div className="text-center">
+                    <button
+                      onClick={() => setShowSignup(true)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      Create New Account
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                  <input 
-                    type="password" 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your password"
-                  />
-                </div>
-                <button 
-                  onClick={() => {
-                    console.log('Attempting login...');
-                    login('admin@qualityneighbor.com', 'admin123').then(() => {
-                      console.log('Login completed');
-                      window.location.reload();
-                    });
-                  }}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Sign In (Demo Admin)
-                </button>
-                <button 
-                  onClick={() => {
-                    console.log('Attempting user login...');
-                    login('user@example.com', 'user123').then(() => {
-                      console.log('User login completed');
-                      window.location.reload();
-                    });
-                  }}
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors mt-2"
-                >
-                  Sign In (Demo User)
-                </button>
               </div>
-            </div>
+            ) : (
+              // Signup Form
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Create Account</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                    <input 
+                      type="text"
+                      value={signupData.name}
+                      onChange={(e) => setSignupData({...signupData, name: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input 
+                      type="email"
+                      value={signupData.email}
+                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input 
+                      type="password"
+                      value={signupData.password}
+                      onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter your password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                    <select
+                      value={signupData.role}
+                      onChange={(e) => setSignupData({...signupData, role: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        if (!signupData.email || !signupData.password || !signupData.name) {
+                          alert('Please fill in all fields');
+                          return;
+                        }
+                        await signup(signupData.email, signupData.password, signupData);
+                        window.location.reload();
+                      } catch (error) {
+                        alert('Signup failed: ' + (error as Error).message);
+                      }
+                    }}
+                    className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors"
+                  >
+                    Create Account
+                  </button>
+                  
+                  <div className="text-center">
+                    <button
+                      onClick={() => setShowSignup(false)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      Back to Sign In
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="border-t pt-6">
-              <p className="text-sm text-gray-600 mb-3">Demo Accounts:</p>
+              <p className="text-sm text-gray-600 mb-3">Demo Accounts Available:</p>
               <div className="space-y-2 text-xs text-gray-500">
                 <div>Admin: admin@qualityneighbor.com / admin123</div>
                 <div>User: user@example.com / user123</div>

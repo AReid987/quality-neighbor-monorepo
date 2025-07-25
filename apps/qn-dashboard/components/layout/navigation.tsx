@@ -40,7 +40,10 @@ export const Navigation = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem onClick={() => {
+                  logout();
+                  window.location.reload();
+                }}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

@@ -7,7 +7,7 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  role: 'Resident' | 'BusinessOwner'
+  role: 'Resident' | 'BusinessOwner' | 'Admin'
 }
 
 interface AuthContextType {
@@ -25,17 +25,25 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Demo users
+// Demo users - only admins can be created here
 const DEMO_USERS = {
-  'demo@qualityneighbor.com': {
+  'admin@qualityneighbor.com': {
     id: '1',
-    email: 'demo@qualityneighbor.com',
-    firstName: 'Demo',
+    email: 'admin@qualityneighbor.com',
+    firstName: 'Admin',
     lastName: 'User',
-    role: 'Resident' as const,
-    password: 'demo123'
+    role: 'Admin' as const,
+    password: 'admin123'
+  },
+  'j.feelgood@qualityneighbor.com': {
+    id: '2',
+    email: 'j.feelgood@qualityneighbor.com',
+    firstName: 'J.',
+    lastName: 'Feelgood',
+    role: 'Admin' as const,
+    password: 'feelgood123'
   }
-}
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
