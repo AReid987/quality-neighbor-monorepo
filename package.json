@@ -16,6 +16,7 @@
     "test:supabase": "npx tsx scripts/test-supabase-setup.ts"
   },
   "devDependencies": {
+    "cz-git": "^1.12.0",
     "next": "13.5.9",
     "prettier": "^3.6.2",
     "turbo": "^2.5.5",
