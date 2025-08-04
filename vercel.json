@@ -1,0 +1,12 @@
+{
+  "builds": [
+    {
+      "src": "apps/qn-platform/next.config.js",
+      "use": "@vercel/next"
+    }
+  ],
+  "rewrites": [{ "source": "/(.*)", "destination": "/apps/qn-platform/$1" }],
+  "env": {
+    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+  }
+}

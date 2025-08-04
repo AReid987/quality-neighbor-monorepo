@@ -6,7 +6,12 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["NODE_MODULES_CACHE", "NPM_RC_ARGS"]
+      "env": [
+        "NODE_MODULES_CACHE",
+        "NPM_RC_ARGS",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+      ]
     },
     "lint": {},
     "dev": {

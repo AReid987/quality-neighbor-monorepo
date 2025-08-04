@@ -6,7 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:unit": "jest --testPathPattern=unit",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "playwright test",
+    "test:critical": "jest --testPathPattern=critical",
+    "test:smoke": "node scripts/smoke-test.js",
+    "test:health": "node scripts/health-check.js",
+    "clean": "rm -rf .next dist",
+    "deploy": "vercel --prod"
   },
   "config": {
     "commitizen": {
