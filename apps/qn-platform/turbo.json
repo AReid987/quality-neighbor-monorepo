@@ -1,4 +1,5 @@
 {
+  "extends": ["//"],
   "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
