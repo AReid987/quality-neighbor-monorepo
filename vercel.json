@@ -5,6 +5,7 @@
       "use": "@vercel/next"
     }
   ],
+  "rewrites": [{ "source": "/(.*)", "destination": "/apps/qn-platform" }],
   "env": {
     "ENABLE_EXPERIMENTAL_COREPACK": "1"
   }
