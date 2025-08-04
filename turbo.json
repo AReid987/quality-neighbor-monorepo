@@ -1,11 +1,17 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
+  "globalPassThroughEnv": ["NODE_MODULES_CACHE", "NPM_RC_ARGS"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [
+        "apps/qn-platform/.next/**",
+        "apps/qn-dashboard/.next/**",
+        "apps/hartland-ranch-insider/dist/**",
+        "dist/**"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
