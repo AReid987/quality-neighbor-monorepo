@@ -1,0 +1,268 @@
+name: 📦 Release Management
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        type: string
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # 📋 Create Release
+  create-release:
+    name: 📋 Create Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏗️ Setup Node.js & PNPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔢 Bump Version
+        id: version
+        run: |
+          # Configure git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Bump version
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            NEW_VERSION="${{ github.event.inputs.version }}"
+          else
+            NEW_VERSION=$(pnpm version ${{ github.event.inputs.release_type }} --no-git-tag-version | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
+          fi
+          
+          echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+          # Update package.json files
+          pnpm changeset version
+          
+          # Commit version changes
+          git add .
+          git commit -m "chore: bump version to v$NEW_VERSION"
+          git tag "v$NEW_VERSION"
+          git push origin main --tags
+
+      - name: 📝 Generate Changelog
+        id: changelog
+        run: |
+          # Generate changelog since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  # 🏗️ Build Release Assets
+  build-release:
+    name: 🏗️ Build Release Assets
+    runs-on: ubuntu-latest
+    needs: [create-release]
+    if: always() && (needs.create-release.result == 'success' || github.event_name == 'push')
+    strategy:
+      matrix:
+        app: [qn-platform, qn-dashboard, qn-business]
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js & PNPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build Application
+        run: pnpm turbo run build --filter=${{ matrix.app }}
+        env:
+          NODE_ENV: production
+
+      - name: 📦 Create Build Archive
+        run: |
+          cd apps/${{ matrix.app }}
+          tar -czf ../../${{ matrix.app }}-build.tar.gz .next dist public package.json
+          cd ../..
+
+      - name: 📤 Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.app }}-build
+          path: ${{ matrix.app }}-build.tar.gz
+          retention-days: 30
+
+  # 📋 Publish Release
+  publish-release:
+    name: 📋 Publish Release
+    runs-on: ubuntu-latest
+    needs: [create-release, build-release]
+    if: always() && needs.build-release.result == 'success'
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📤 Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ./artifacts
+
+      - name: 📋 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.tag || github.ref_name }}
+          name: Release ${{ needs.create-release.outputs.tag || github.ref_name }}
+          body: |
+            ## 🚀 Quality Neighbor Release ${{ needs.create-release.outputs.tag || github.ref_name }}
+            
+            ### 📝 What's Changed
+            ${{ needs.create-release.outputs.changelog || 'See commit history for changes.' }}
+            
+            ### 📦 Applications Included
+            - **QN Platform**: Resident-facing community platform
+            - **QN Dashboard**: Internal team management dashboard  
+            - **QN Business**: Business owner dashboard
+            
+            ### 🔧 Installation
+            Download the appropriate build artifact for your deployment environment.
+            
+            ### 🧪 Testing
+            All releases are thoroughly tested through our CI/CD pipeline including:
+            - Unit and integration tests
+            - Security scanning
+            - Performance validation
+            - Smoke tests
+            
+            ---
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }}
+          files: |
+            ./artifacts/**/*.tar.gz
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          generate_release_notes: true
+
+  # 🚀 Deploy Release
+  deploy-release:
+    name: 🚀 Deploy Release
+    needs: [publish-release]
+    uses: ./.github/workflows/deploy-production.yml
+    with:
+      app: 'all'
+      skip_tests: false
+    secrets: inherit
+
+  # 📢 Release Notification
+  notify-release:
+    name: 📢 Release Notification
+    runs-on: ubuntu-latest
+    needs: [publish-release, deploy-release]
+    if: always()
+    
+    steps:
+      - name: 📢 Slack Release Notification
+        if: needs.publish-release.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#quality-neighbor-releases'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          custom_payload: |
+            {
+              "text": "🎉 New Quality Neighbor Release!",
+              "attachments": [{
+                "color": "good",
+                "fields": [{
+                  "title": "Version",
+                  "value": "${{ needs.create-release.outputs.tag || github.ref_name }}",
+                  "short": true
+                }, {
+                  "title": "Repository",
+                  "value": "${{ github.repository }}",
+                  "short": true
+                }, {
+                  "title": "Release Notes",
+                  "value": "https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-release.outputs.tag || github.ref_name }}",
+                  "short": false
+                }]
+              }]
+            }
+
+      - name: 📧 Email Release Notification
+        if: needs.publish-release.result == 'success'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🚀 Quality Neighbor Release ${{ needs.create-release.outputs.tag || github.ref_name }}"
+          to: ${{ secrets.RELEASE_NOTIFICATION_EMAIL }}
+          from: Quality Neighbor CI/CD <${{ secrets.EMAIL_USERNAME }}>
+          html_body: |
+            <h2>🚀 Quality Neighbor Release ${{ needs.create-release.outputs.tag || github.ref_name }}</h2>
+            
+            <p>A new version of Quality Neighbor has been released and deployed to production.</p>
+            
+            <h3>📝 What's Changed</h3>
+            <pre>${{ needs.create-release.outputs.changelog || 'See commit history for changes.' }}</pre>
+            
+            <h3>🔗 Links</h3>
+            <ul>
+              <li><a href="https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-release.outputs.tag || github.ref_name }}">Release Notes</a></li>
+              <li><a href="https://qualityneighbor.com">QN Platform</a></li>
+              <li><a href="https://dashboard.qualityneighbor.com">QN Dashboard</a></li>
+            </ul>
+            
+            <p><em>This is an automated notification from the Quality Neighbor CI/CD pipeline.</em></p>
