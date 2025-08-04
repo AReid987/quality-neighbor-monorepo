@@ -1,0 +1,8 @@
+{
+  "builds": [
+    {
+      "src": "apps/qn-platform/next.config.js",
+      "use": "@vercel/next"
+    }
+  ]
+}
