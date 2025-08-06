@@ -17,6 +17,13 @@ permissions:
   # Add a comment to the pull request.
   pull-requests: write
 on:
+  # Run on pull request, so that the PR can be analyzed.
+  pull_request:
+
+  # Run on merge to the base branch, so that the baseline
+  # AppMap archive can be brought up-to-date.
+  # If your base branch is not 'main', (e.g. 'master', 'develop'),
+  # change this accordingly.
   push:
     branches:
       - main
@@ -24,21 +31,10 @@ on:
   # Run weekly, so that the baseline AppMap artifact does not expire.
   schedule:
     - cron: '0 0 * * 0'
-  push:
-    branches: [ main, develop ]
-# Run on pull request, so that the PR can be analyzed.
-
-
-  pull_request:
-    branches: [ main, develop ]
-  # Run on merge to the base branch, so that the baseline
-  # AppMap archive can be brought up-to-date.
-  # If your base branch is not 'main', (e.g. 'master', 'develop'),
-  # change this accordingly.
 
 env:
-  NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  NODE_VERSION: "18"
+  PNPM_VERSION: "8"
 
 jobs:
   # Job 1: Install dependencies and cache
@@ -296,7 +292,7 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PRODUCTION }}
           working-directory: apps/qn-platform
           scope: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-args: '--prod'
+          vercel-args: "--prod"
 
   # Job 8: Database migrations (production only)
   migrate-database:
