@@ -34,7 +34,7 @@ on:
 
 env:
   NODE_VERSION: "18"
-  PNPM_VERSION: "8"
+  PNPM_VERSION: "10.13.1"
 
 jobs:
   # Job 1: Install dependencies and cache
@@ -225,7 +225,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -266,6 +266,9 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
           working-directory: apps/qn-platform
           scope: ${{ secrets.VERCEL_ORG_ID }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
 
   # Job 7: Deploy to production (on main branch)
   deploy-production:
@@ -293,6 +296,9 @@ jobs:
           working-directory: apps/qn-platform
           scope: ${{ secrets.VERCEL_ORG_ID }}
           vercel-args: "--prod"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
 
   # Job 8: Database migrations (production only)
   migrate-database:
