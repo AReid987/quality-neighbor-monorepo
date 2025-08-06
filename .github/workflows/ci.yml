@@ -209,10 +209,10 @@ jobs:
         env:
           CI: true
 
-    - name: Archive AppMaps
-    uses: getappmap/archive-action@v1
-    with:
-      revision: ${{ github.event.pull_request.base.sha }}
+      - name: Archive AppMaps
+        uses: getappmap/archive-action@v1
+        with:
+          revision: ${{ github.event.pull_request.base.sha }}
 
   # Job 5: Security audit
   security:
