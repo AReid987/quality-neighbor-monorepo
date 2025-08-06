@@ -1,0 +1,173 @@
+name: 🚀 Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Application to deploy'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - qn-platform
+          - qn-dashboard
+          - qn-business
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # 🚀 Staging Deployment
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        app: ${{ github.event.inputs.app == 'all' && fromJson('["qn-platform", "qn-dashboard", "qn-business"]') || fromJson(format('["{0}"]', github.event.inputs.app || 'qn-platform')) }}
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js & PNPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build Application
+        run: pnpm turbo run build --filter=${{ matrix.app }}
+
+      - name: 🚀 Deploy to Vercel (Staging)
+        uses: vercel/action@v1
+        id: vercel-deploy
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets[format('VERCEL_PROJECT_ID_{0}', upper(replace(matrix.app, '-', '_')))] }}
+          working-directory: apps/${{ matrix.app }}
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: 🔗 Get Preview URL
+        run: echo "Preview URL:" ${{ steps.vercel-deploy.outputs.preview-url }}
+
+      - name: 🧪 Run Smoke Tests
+        run: |
+          # Wait for deployment to be ready
+          sleep 30
+          
+          # Basic health check
+          curl -f ${{ steps.vercel-deploy.outputs.preview-url }} || exit 1
+          
+          # Run app-specific smoke tests if they exist
+          if [ -f "apps/${{ matrix.app }}/scripts/smoke-test.js" ]; then
+            cd apps/${{ matrix.app }}
+            PREVIEW_URL="${{ steps.vercel-deploy.outputs.preview-url }}" node scripts/smoke-test.js
+          fi
+
+      - name: 📊 Lighthouse Performance Audit
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: ${{ steps.vercel-deploy.outputs.preview-url }}
+          configPath: './lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: 💬 Comment PR with Preview
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🚀 Staging Deployment')
+            );
+            
+            const body = `## 🚀 Staging Deployment - ${{ matrix.app }}
+            
+            ✅ **Deployment Status**: Success
+            🔗 **Preview URL**: ${{ steps.vercel-deploy.outputs.preview-url }}
+            📊 **Performance**: Lighthouse audit completed
+            🧪 **Smoke Tests**: Passed
+            
+            ---
+            *Deployed from commit: ${context.sha.substring(0, 7)}*`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+  # 🗄️ Database Migration (Staging)
+  migrate-staging-db:
+    name: 🗄️ Migrate Staging Database
+    runs-on: ubuntu-latest
+    environment: staging
+    if: contains(github.event.head_commit.message, '[migrate]') || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🗄️ Run Database Migrations
+        run: |
+          cd apps/qn-platform
+          npx supabase db push --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STAGING }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_STAGING }}
+
+      - name: 🧪 Verify Migration
+        run: |
+          cd apps/qn-platform
+          npx supabase db diff --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STAGING }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_STAGING }}
