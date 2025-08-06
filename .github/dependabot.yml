@@ -1,0 +1,111 @@
+version: 2
+updates:
+  # Root dependencies
+  - package-ecosystem: "npm"
+    directory: "/" # If you use a root package.json for shared scripts/etc
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+
+  # Apps
+  - package-ecosystem: "npm"
+    directory: "/apps/hartland-ranch-insider"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/apps/qn-api"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/apps/qn-business"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/apps/qn-dashboard"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/apps/qn-news-dashboard"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/apps/qn-platform"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+
+  # Packages
+  - package-ecosystem: "npm"
+    directory: "/packages/auth"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/packages/config"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/packages/database"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/packages/eslint-config"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/packages/types"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/packages/typescript-config"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+  - package-ecosystem: "npm"
+    directory: "/packages/ui"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "all"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

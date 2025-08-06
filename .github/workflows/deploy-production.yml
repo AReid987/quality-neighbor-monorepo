@@ -1,0 +1,279 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Application to deploy'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - qn-platform
+          - qn-dashboard
+          - qn-business
+      skip_tests:
+        description: 'Skip pre-deployment tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # 🧪 Pre-deployment Validation
+  pre-deployment-tests:
+    name: 🧪 Pre-deployment Tests
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests }}
+    timeout-minutes: 15
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js & PNPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧪 Run Critical Tests
+        run: |
+          pnpm turbo run test:critical
+          pnpm turbo run test:integration
+
+      - name: 🔍 Security Scan
+        run: pnpm audit --audit-level high
+
+  # 🗄️ Database Migration (Production)
+  migrate-production-db:
+    name: 🗄️ Migrate Production Database
+    runs-on: ubuntu-latest
+    environment: production
+    needs: [pre-deployment-tests]
+    if: always() && (needs.pre-deployment-tests.result == 'success' || inputs.skip_tests)
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 💾 Backup Database
+        run: |
+          cd apps/qn-platform
+          # Create backup before migration
+          npx supabase db dump --linked > backup-$(date +%Y%m%d-%H%M%S).sql
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: 🗄️ Run Database Migrations
+        run: |
+          cd apps/qn-platform
+          npx supabase db push --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: 🧪 Verify Migration
+        run: |
+          cd apps/qn-platform
+          npx supabase db diff --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+  # 🚀 Production Deployment
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    needs: [migrate-production-db]
+    if: always() && needs.migrate-production-db.result == 'success'
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        app: ${{ github.event.inputs.app == 'all' && fromJson('["qn-platform", "qn-dashboard", "qn-business"]') || fromJson(format('["{0}"]', github.event.inputs.app || 'qn-platform')) }}
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js & PNPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build Application
+        run: pnpm turbo run build --filter=${{ matrix.app }}
+        env:
+          NODE_ENV: production
+
+      - name: 🚀 Deploy to Vercel (Production)
+        uses: vercel/action@v1
+        id: vercel-deploy
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets[format('VERCEL_PROJECT_ID_{0}', upper(replace(matrix.app, '-', '_')))] }}
+          vercel-args: '--prod'
+          working-directory: apps/${{ matrix.app }}
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: 🔗 Get Production URL
+        run: echo "Production URL: ${{ steps.vercel-deploy.outputs.preview-url }}"
+
+      - name: ⏳ Wait for Deployment
+        run: sleep 60
+
+      - name: 🧪 Production Health Check
+        run: |
+          # Comprehensive health checks
+          PROD_URL="${{ steps.vercel-deploy.outputs.preview-url }}"
+          
+          # Basic connectivity
+          curl -f "$PROD_URL" || exit 1
+          
+          # API health check (if applicable)
+          if [ "${{ matrix.app }}" = "qn-platform" ]; then
+            curl -f "$PROD_URL/api/health" || echo "API health check not available"
+          fi
+          
+          # Run production smoke tests
+          if [ -f "apps/${{ matrix.app }}/scripts/prod-health-check.js" ]; then
+            cd apps/${{ matrix.app }}
+            PROD_URL="$PROD_URL" node scripts/prod-health-check.js
+          fi
+
+      - name: 📊 Post-deployment Performance Check
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: ${{ steps.vercel-deploy.outputs.preview-url }}
+          configPath: './lighthouserc.production.json'
+          uploadArtifacts: true
+
+  # 📢 Deployment Notification
+  notify-deployment:
+    name: 📢 Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+      - name: 📊 Deployment Status
+        run: |
+          echo "Deployment completed with status: ${{ needs.deploy-production.result }}"
+
+      - name: 📢 Slack Success Notification
+        if: needs.deploy-production.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#quality-neighbor-deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,took
+          custom_payload: |
+            {
+              "text": "🚀 Production Deployment Successful!",
+              "attachments": [{
+                "color": "good",
+                "fields": [{
+                  "title": "Repository",
+                  "value": "${{ github.repository }}",
+                  "short": true
+                }, {
+                  "title": "Commit",
+                  "value": "${{ github.sha }}",
+                  "short": true
+                }, {
+                  "title": "Author",
+                  "value": "${{ github.actor }}",
+                  "short": true
+                }, {
+                  "title": "Branch",
+                  "value": "${{ github.ref_name }}",
+                  "short": true
+                }]
+              }]
+            }
+
+      - name: 📢 Slack Failure Notification
+        if: needs.deploy-production.result == 'failure'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#quality-neighbor-alerts'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+
+  # 🔄 Rollback Capability
+  rollback-production:
+    name: 🔄 Rollback Production
+    runs-on: ubuntu-latest
+    if: failure() && needs.deploy-production.result == 'failure'
+    environment: production
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔄 Trigger Rollback
+        run: |
+          echo "Production deployment failed. Manual rollback may be required."
+          echo "Check Vercel dashboard for rollback options."
+          
+      - name: 📢 Rollback Alert
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#quality-neighbor-alerts'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          custom_payload: |
+            {
+              "text": "🚨 Production Deployment Failed - Rollback Required!",
+              "attachments": [{
+                "color": "danger",
+                "fields": [{
+                  "title": "Action Required",
+                  "value": "Manual rollback may be needed. Check Vercel dashboard.",
+                  "short": false
+                }]
+              }]
+            }

@@ -53,7 +53,7 @@ mkdir -p qn-dashboard-static
 
 # Step 5: Copy built files
 echo -e "${YELLOW}Copying built files...${NC}"
-cp -r apps/qn-dashboard/out/* qn-dashboard-static/
+node -e "const fs = require('fs'); fs.rmSync('qn-dashboard-static', { recursive: true, force: true }); fs.mkdirSync('qn-dashboard-static', { recursive: true }); fs.cpSync('apps/qn-dashboard/out', 'qn-dashboard-static', { recursive: true });"
 
 # Step 6: Create vercel.json if it doesn't exist
 if [ ! -f "qn-dashboard-static/vercel.json" ]; then

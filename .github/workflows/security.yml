@@ -1,0 +1,125 @@
+name: 🔒 Security Scanning
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Weekly on Monday at 2 AM
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # 🛡️ Comprehensive Security Analysis
+  security-analysis:
+    name: 🛡️ Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Dependency Vulnerability Scan
+        run: |
+          pnpm audit --audit-level moderate
+          pnpm dlx audit-ci --moderate
+
+      - name: 🔐 Secret Detection
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: 🛡️ SAST with Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+            p/typescript
+            p/react
+            p/nextjs
+            p/nodejs
+
+      - name: 🔒 Snyk Security Test
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium --all-projects
+
+      - name: 📊 Upload SARIF Results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: semgrep.sarif
+
+  # 🔐 License Compliance
+  license-compliance:
+    name: 🔐 License Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: 📚 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 📋 License Check
+        run: |
+          pnpm dlx license-checker --summary
+          pnpm dlx license-checker --excludePrivatePackages --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC'
+
+  # 🔍 Container Security (Future)
+  container-security:
+    name: 🔍 Container Security
+    runs-on: ubuntu-latest
+    if: false # Disabled until we have Docker containers
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Trivy Container Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'quality-neighbor:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📊 Upload Trivy Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
