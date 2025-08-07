@@ -1,4 +1,5 @@
 {
+  "installCommand": "pnpm install",
   "env": {
     "ENABLE_EXPERIMENTAL_COREPACK": "1"
   }
