@@ -1,6 +1,7 @@
 {
   "installCommand": "pnpm install",
   "env": {
-    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+    "ENABLE_EXPERIMENTAL_COREPACK": "1",
+    "CACHE_BUSTER": "2025-08-07T17:16:02.132807"
   }
 }
