@@ -1,7 +1,5 @@
 # Quality Neighbor Monorepo
 
-![Alt](https://repobeats.axiom.co/api/embed/3357f3548614bf40aec78211f756ae5005db6097.svg "Repobeats analytics image")
-
 A comprehensive Turborepo-based monorepo for the Quality Neighbor hyperlocal community platform targeting Hartland Ranch, Austin, Texas.
 
 ## 🚀 Project Overview
