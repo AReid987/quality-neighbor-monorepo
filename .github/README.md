@@ -1,248 +1,295 @@
-# 🚀 Quality Neighbor CI/CD Pipeline
+# Quality Neighbor Monorepo
 
-## Overview
+![Alt](https://repobeats.axiom.co/api/embed/3357f3548614bf40aec78211f756ae5005db6097.svg "Repobeats analytics image")
 
-This directory contains the complete CI/CD pipeline for the Quality Neighbor monorepo, implementing automated testing, security scanning, and deployment workflows.
+A comprehensive Turborepo-based monorepo for the Quality Neighbor hyperlocal community platform targeting Hartland Ranch, Austin, Texas.
 
-## 🏗️ Workflow Architecture
+## 🚀 Project Overview
 
-```mermaid
-graph TD
-    A[Push/PR] --> B[Quality Gate]
-    B --> C[Test Suite]
-    B --> D[Security Scan]
-    C --> E[Build Verification]
-    D --> E
-    E --> F{Branch?}
-    F -->|develop/PR| G[Deploy Staging]
-    F -->|main| H[Deploy Production]
-    G --> I[Performance Tests]
-    H --> J[Health Checks]
-    I --> K[PR Comment]
-    J --> L[Notifications]
-```
+Quality Neighbor is a hyperlocal platform designed to connect community residents with each other and with local businesses. Unlike existing platforms that suffer from negativity and fragmentation, Quality Neighbor focuses on curated content, trusted interactions, and direct community value.
 
-## 📋 Workflows
+### 🎯 Mission
+Build stronger communities through strategic communication and authentic engagement, starting with Hartland Ranch and expanding to other neighborhoods.
 
-### 1. Main CI Pipeline (`ci.yml`)
-**Triggers**: Push to main/develop, Pull Requests
-**Purpose**: Comprehensive validation of code changes
+## 🏗️ Monorepo Structure
 
-**Jobs**:
-- **Quality Gate**: Linting, type checking, formatting, security audit
-- **Test Suite**: Unit, integration, and E2E tests with coverage
-- **Build Verification**: Builds all applications in parallel
-- **Security Scanning**: SAST, dependency scanning, secret detection
-- **Performance Monitoring**: Lighthouse audits and bundle analysis
+qn-monorepo/ ├── apps/ │ ├── qn-dashboard/ # Internal team management app │ ├── qn-platform/ # Resident-facing platform │ ├── qn-business/ # Business owner dashboard │ └── qn-api/ # Backend API server ├── packages/ │ ├── ui/ # Shared UI components (Radix UI + Tailwind) │ ├── types/ # Shared TypeScript types │ ├── database/ # Database schemas and utilities │ ├── auth/ # Shared authentication logic │ └── config/ # Shared configurations ├── Quality-Neighbor-Docs/ # Comprehensive project documentation ├── tools/ │ └── eslint-config/ # Shared ESLint configuration └── README.md
 
-### 2. Security Scanning (`security.yml`)
-**Triggers**: Weekly schedule, Push to main, Pull Requests
-**Purpose**: Comprehensive security analysis
 
-**Features**:
-- Dependency vulnerability scanning
-- Secret detection with TruffleHog
-- SAST with Semgrep
-- License compliance checking
-- Container security (when applicable)
+## 📱 Applications
 
-### 3. Staging Deployment (`deploy-staging.yml`)
-**Triggers**: Push to develop, Pull Requests
-**Purpose**: Automated staging deployments with testing
+### 🎛️ qn-dashboard (Internal Team App)
+**Status:** ✅ **WORKING** - Fully migrated and tested
 
-**Features**:
-- Multi-app deployment strategy
-- Smoke testing and health checks
-- Lighthouse performance audits
-- PR preview comments
-- Database migration support
+- **Purpose:** Internal team management and operations
+- **Users:** GTM strategists, marketing managers, neighborhood managers, agent squads
+- **Features:**
+  - Interactive strategy guide with 3-phase launch plan
+  - Newsletter content management
+  - Marketing campaign tracking
+  - User/business moderation tools
+  - Analytics and reporting dashboard
+- **Port:** 3001
+- **Tech:** Next.js 13, React, TypeScript, Tailwind CSS
 
-### 4. Production Deployment (`deploy-production.yml`)
-**Triggers**: Push to main, Manual dispatch
-**Purpose**: Safe production deployments with rollback
+### 🏠 qn-platform (Resident App)
+**Status:** 🔄 **READY FOR DEVELOPMENT**
 
-**Features**:
-- Pre-deployment validation
-- Database backup and migration
-- Blue-green deployment strategy
-- Comprehensive health checks
-- Automatic rollback on failure
-- Slack notifications
+- **Purpose:** Primary resident-facing platform
+- **Users:** Community residents in Hartland Ranch
+- **Planned Features:**
+  - Landing page and newsletter signup
+  - User profiles and preferences
+  - Service/tool/skill exchange system
+  - In-app messaging
+  - Local business discovery
+  - Safety check-ins
 
-### 5. Release Management (`release.yml`)
-**Triggers**: Version tags, Manual dispatch
-**Purpose**: Automated release creation and deployment
+### 🏢 qn-business (Business Owner App)
+**Status:** 🔄 **READY FOR DEVELOPMENT**
 
-**Features**:
-- Semantic versioning
-- Automated changelog generation
-- Build artifact creation
-- GitHub release publishing
-- Multi-channel notifications
+- **Purpose:** Business owner dashboard and advertising management
+- **Users:** Local business owners
+- **Planned Features:**
+  - Business profile management
+  - Advertising campaign creation
+  - Performance analytics
+  - Direct communication with QN team
+  - Billing and subscription management
 
-## 🔧 Configuration
+### 🔧 qn-api (Backend API)
+**Status:** 🔄 **READY FOR DEVELOPMENT**
 
-### Environment Variables
+- **Purpose:** Shared backend services
+- **Features:**
+  - Authentication and authorization (JWT + PostgreSQL)
+  - Database operations
+  - Email services
+  - File upload/storage
+  - Third-party integrations (Stripe Identity, etc.)
 
-#### Required Secrets
+## 📦 Shared Packages
+
+### 🎨 @qn/ui
+**Status:** ✅ **CONFIGURED**
+
+Complete UI component library built on Radix UI primitives:
+- All shadcn/ui components included
+- Consistent design system with 8px grid
+- Tailwind CSS styling
+- TypeScript support
+- Accessible components
+
+### 🔍 @qn/types
+**Status:** ✅ **CONFIGURED**
+
+Shared TypeScript interfaces:
+- `User` - User profiles and roles
+- `ServiceListing` - Service/tool/skill exchanges
+- `Comment` - Comment system
+- `Business` - Business profiles
+
+### ⚙️ @qn/config
+**Status:** ✅ **CONFIGURED**
+
+Shared configuration constants:
+- Design system colors and spacing
+- Tailwind configuration
+- Environment configurations
+
+### 🗄️ @qn/database
+**Status:** 🔄 **PLACEHOLDER**
+
+Ready for PostgreSQL implementation:
+- User management
+- Service listings
+- Business profiles
+- Authentication
+- Messaging system
+
+### 🔐 @qn/auth
+**Status:** 🔄 **PLACEHOLDER**
+
+Authentication and authorization:
+- JWT token management
+- Role-based access control
+- Stripe Identity integration
+- Password management
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18.0 or higher
+- PNPM package manager
+- Git
+
+### Installation
+
+1. **Clone the repository**
 ```bash
-# Vercel Deployment
-VERCEL_TOKEN=your_vercel_token
-VERCEL_ORG_ID=your_org_id
-VERCEL_PROJECT_ID_QN_PLATFORM=platform_project_id
-VERCEL_PROJECT_ID_QN_DASHBOARD=dashboard_project_id
-VERCEL_PROJECT_ID_QN_BUSINESS=business_project_id
+git clone https://github.com/AReid987/quality-neighbor-monorepo.git
+cd quality-neighbor-monorepo
+Install dependencies
+pnpm install
+Start development
+# Run all apps in development mode
+pnpm dev
 
-# Supabase
-SUPABASE_ACCESS_TOKEN=your_supabase_token
-SUPABASE_PROJECT_REF=your_project_ref
-SUPABASE_ACCESS_TOKEN_STAGING=staging_token
-SUPABASE_PROJECT_REF_STAGING=staging_ref
+# Run specific app
+pnpm dev --filter=@qn/dashboard
 
-# Security Scanning
-SNYK_TOKEN=your_snyk_token
-CODECOV_TOKEN=your_codecov_token
+# Build all apps
+pnpm build
 
-# Notifications
-SLACK_WEBHOOK=your_slack_webhook
-EMAIL_USERNAME=your_email
-EMAIL_PASSWORD=your_email_password
-RELEASE_NOTIFICATION_EMAIL=team@qualityneighbor.com
+# Build specific app
+pnpm build --filter=@qn/dashboard
+📊 Current Status
+✅ Completed
+Turborepo monorepo setup
+qn-dashboard fully migrated and working
+Shared UI component library
+TypeScript types and configurations
+Build system and development workflow
+All project documentation preserved
+GitHub repository created and pushed
+🔄 In Progress
+PostgreSQL database setup
+Authentication system implementation
+API development
+Resident platform development
+Business owner platform development
+🛠️ Technology Stack
+Frontend
+Framework: Next.js 13 with App Router
+Language: TypeScript
+Styling: Tailwind CSS
+UI Components: Radix UI primitives
+Icons: Lucide React
+Backend (Planned)
+Language: Node.js with Express.js
+Database: PostgreSQL
+Authentication: JWT with role-based access control
+ID Verification: Stripe Identity
+Email: SendGrid/Mailgun
+Development Tools
+Package Manager: PNPM with workspaces
+Build System: Turborepo
+Linting: ESLint
+Type Checking: TypeScript
+Git Hooks: Pre-commit hooks
+📋 Development Workflow
+Commands
+# Development
+pnpm dev                              # Run all apps
+pnpm dev --filter=@qn/dashboard      # Run specific app
 
-# Performance
-TURBO_TOKEN=your_turbo_token
-TURBO_TEAM=your_turbo_team
-```
+# Building
+pnpm build                           # Build all apps
+pnpm build --filter=@qn/dashboard   # Build specific app
 
-#### Optional Secrets
-```bash
-# GitHub Token (auto-provided)
-GITHUB_TOKEN=auto_generated
+# Linting
+pnpm lint                            # Lint all packages
+pnpm lint --filter=@qn/dashboard    # Lint specific app
 
-# Additional integrations
-LIGHTHOUSE_TOKEN=your_lighthouse_token
-```
+# Type Checking
+pnpm check-types                     # Check types in all packages
+Adding New Apps
+Create new directory in apps/
+Add package.json with workspace dependencies
+Configure in turbo.json
+Add to development scripts
+Adding New Packages
+Create new directory in packages/
+Add package.json with proper exports
+Add to dependent apps with workspace:*
+Configure build pipeline
+📚 Documentation
+Comprehensive project documentation is available in Quality-Neighbor-Docs/:
 
-### Package Scripts
+Project Brief: Overview and business requirements
+Architecture: Technical specifications and system design
+User Stories: Agile development epics and user stories
+API Documentation: Backend API reference
+Frontend Guidelines: Component architecture and patterns
+Research: Market analysis and strategy documentation
+🎯 MVP Development Plan
+Phase 1: Core Infrastructure (Sprint 0)
+✅ Monorepo setup and configuration
+PostgreSQL database setup
+Authentication system (JWT + RBAC)
+Basic API endpoints
+Phase 2: Resident Platform (Epic 1)
+Landing page and signup flow
+User profile system
+Service/tool/skill exchange
+In-app messaging
+Identity verification
+Phase 3: Business Features (Epic 2)
+Business owner dashboard
+Advertising campaign management
+Performance analytics
+Payment integration
+Phase 4: Internal Tools (Epic 3)
+Enhanced dashboard features
+Newsletter management
+User moderation tools
+Advanced analytics
+🔒 Security Considerations
+Authentication: JWT-based with secure token management
+Authorization: Role-based access control (Resident, Business, Admin)
+Data Protection: Encryption at rest and in transit
+Input Validation: Comprehensive validation on all inputs
+Privacy: GDPR and CCPA compliant data handling
+🚀 Deployment
+Current Setup
+Development: Local development with hot reloading
+Build: Static export for dashboard, server-side for API
+CI/CD: GitHub Actions (ready for setup)
+Planned Infrastructure
+Frontend: Vercel/Netlify for static apps
+Backend: AWS/GCP for API services
+Database: Managed PostgreSQL (AWS RDS/GCP Cloud SQL)
+Storage: AWS S3/GCP Cloud Storage
+🤝 Contributing
+Development Process
+Create feature branch from main
+Make changes following coding standards
+Add tests for new functionality
+Run linting and type checking
+Create pull request with detailed description
+Code Standards
+TypeScript for type safety
+ESLint for code consistency
+Prettier for formatting
+Conventional commits
+Comprehensive documentation
+📊 Performance Metrics
+Build Performance
+Dashboard Build Time: ~16.4 seconds
+Package Dependencies: Properly optimized
+Bundle Size: Optimized for production
+Type Checking: Fast incremental builds
+Development Experience
+Hot Reload: Instant updates
+Error Handling: Clear error messages
+IntelliSense: Full TypeScript support
+Debugging: Source maps enabled
+🔗 Links
+GitHub Repository: https://github.com/AReid987/quality-neighbor-monorepo
+Dashboard (Dev): http://localhost:3001
+Documentation: Quality-Neighbor-Docs/
+Issues: GitHub Issues for bug reports and feature requests
+📄 License
+This project is proprietary and confidential. All rights reserved.
 
-Each application must implement these scripts:
+🆘 Support
+For technical support or questions:
 
-```json
-{
-  "scripts": {
-    "dev": "Development server",
-    "build": "Production build",
-    "start": "Start production server",
-    "lint": "Code linting",
-    "type-check": "TypeScript validation",
-    "test": "All tests",
-    "test:unit": "Unit tests only",
-    "test:integration": "Integration tests",
-    "test:e2e": "End-to-end tests",
-    "test:critical": "Critical path tests",
-    "test:smoke": "Smoke tests",
-    "test:health": "Health checks",
-    "clean": "Clean build artifacts",
-    "deploy": "Deploy to production"
-  }
-}
-```
+Review the comprehensive documentation in Quality-Neighbor-Docs/
+Check the monorepo setup status in MONOREPO_SETUP_STATUS.md
+Use GitHub Issues for bug reports and feature requests
+Contact the development team for architectural questions
+Quality Neighbor Monorepo - Building stronger communities through strategic communication and authentic engagement.
 
-## 🧪 Testing Strategy
+Last Updated: January 17, 2025 Status: ✅ Monorepo Complete - Ready for Epic 1 & 2 Development
 
-### Test Types
-1. **Unit Tests**: Component and function testing
-2. **Integration Tests**: API and database integration
-3. **E2E Tests**: Full user journey testing
-4. **Critical Tests**: Core functionality validation
-5. **Smoke Tests**: Basic deployment validation
-6. **Health Checks**: Production monitoring
-
-### Coverage Requirements
-- **Unit Tests**: 80% minimum coverage
-- **Integration Tests**: Critical paths covered
-- **E2E Tests**: Main user flows
-- **Performance**: Lighthouse scores > 80
-
-## 🔒 Security Measures
-
-### Automated Scanning
-- **Semgrep**: SAST for code vulnerabilities
-- **Snyk**: Dependency vulnerability scanning
-- **TruffleHog**: Secret detection
-- **License Check**: Open source compliance
-
-### Security Policies
-- High/Critical vulnerabilities block deployment
-- Secrets must not be committed to repository
-- All dependencies scanned weekly
-- Security patches applied automatically
-
-## 📊 Performance Monitoring
-
-### Lighthouse Audits
-- **Staging**: Warning thresholds (80+ scores)
-- **Production**: Error thresholds (85+ scores)
-- **Metrics**: FCP, LCP, CLS tracking
-
-### Bundle Analysis
-- Size limit enforcement
-- Dependency analysis
-- Performance regression detection
-
-## 🚀 Deployment Strategy
-
-### Environments
-1. **Development**: Local development
-2. **Staging**: Feature testing and validation
-3. **Production**: Live user environment
-
-### Deployment Flow
-```
-Feature Branch → PR → Staging → Review → Main → Production
-```
-
-### Rollback Strategy
-- Automatic rollback on health check failure
-- Manual rollback capability
-- Database backup before migrations
-- Vercel deployment history
-
-## 📢 Notifications
-
-### Slack Channels
-- `#quality-neighbor-deployments`: Successful deployments
-- `#quality-neighbor-alerts`: Failures and issues
-- `#quality-neighbor-releases`: New releases
-
-### Email Notifications
-- Release announcements
-- Critical failure alerts
-- Weekly security reports
-
-## 🛠️ Maintenance
-
-### Weekly Tasks
-- Review security scan results
-- Update dependencies
-- Monitor performance metrics
-- Clean up old artifacts
-
-### Monthly Tasks
-- Review and update CI/CD workflows
-- Performance optimization
-- Security policy updates
-- Dependency audit
-
-## 📚 Resources
-
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Vercel Deployment Guide](https://vercel.com/docs)
-- [Supabase CLI Reference](https://supabase.com/docs/reference/cli)
-- [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci)
-- [Turborepo Documentation](https://turbo.build/repo/docs)
-
----
-
-**Last Updated**: 2025-01-19
-**Maintained By**: Quality Neighbor DevOps Team
