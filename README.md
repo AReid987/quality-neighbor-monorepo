@@ -1,7 +1,5 @@
 # Quality Neighbor Monorepo
 
-![Alt](https://repobeats.axiom.co/api/embed/3357f3548614bf40aec78211f756ae5005db6097.svg "Repobeats analytics image")
-
 A comprehensive Turborepo-based monorepo for the Quality Neighbor hyperlocal community platform targeting Hartland Ranch, Austin, Texas.
 
 ## 🚀 Project Overview
@@ -246,7 +244,7 @@ Comprehensive project documentation is available in `Quality-Neighbor-Docs/`:
 
 - **Project Brief:** Overview and business requirements
 - **Architecture:** Technical specifications and system design
-- **User Stories:** Agile development epics and user stories
+-  **User Stories:** Agile development epics and user stories
 - **API Documentation:** Backend API reference
 - **Frontend Guidelines:** Component architecture and patterns
 - **Research:** Market analysis and strategy documentation
