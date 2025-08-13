@@ -244,7 +244,7 @@ Comprehensive project documentation is available in `Quality-Neighbor-Docs/`:
 
 - **Project Brief:** Overview and business requirements
 - **Architecture:** Technical specifications and system design
--  **User Stories:** Agile development epics and user stories
+- **User Stories:** Agile development epics and user stories
 - **API Documentation:** Backend API reference
 - **Frontend Guidelines:** Component architecture and patterns
 - **Research:** Market analysis and strategy documentation
