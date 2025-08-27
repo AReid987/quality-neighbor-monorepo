@@ -31,7 +31,7 @@ jobs:
       - name: 📦 Install PNPM
         uses: pnpm/action-setup@v2
         with:
-          version: '8'
+          version: '10.13.1'
 
       - name: 📚 Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -70,7 +70,7 @@ jobs:
 
       - name: 📊 Upload SARIF Results
         if: always()
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: semgrep.sarif
 
@@ -92,7 +92,7 @@ jobs:
       - name: 📦 Install PNPM
         uses: pnpm/action-setup@v2
         with:
-          version: '8'
+          version: '10.13.1'
 
       - name: 📚 Install Dependencies
         run: pnpm install --frozen-lockfile
