@@ -1,48 +1,11 @@
 "use client";
 
 import { Check, Clock, Sparkles } from "lucide-react";
-import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { NewsletterSignup } from "@/components/newsletter/NewsletterSignup";
 
 const HeroSection = () => {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { signUp, user, qnUser } = useAuth();
-
-  const handleNewsletterSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      alert("Please enter your email address to sign up for the newsletter.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Generate a temporary password for newsletter signup
-      const tempPassword = Math.random().toString(36).slice(-8) + "!1A";
-      
-      // Sign up the user with Supabase Auth + QN profile
-      const { error } = await signUp(email, tempPassword, {
-        firstName: "Newsletter",
-        lastName: "Subscriber", 
-        location: "Community",
-        role: "Resident"
-      });
-
-      if (error) {
-        alert(`Signup failed: ${error.message || error}`);
-      } else {
-        // Redirect to dashboard without alert
-        window.location.href = "/dashboard";
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-      alert("Signup failed. Please try again.");
-    } finally {
-      setLoading(false);
-      setEmail("");
-    }
-  };
+  const { user, qnUser } = useAuth();
 
   // If user is already logged in, show different content
   if (user && qnUser) {
@@ -113,26 +76,12 @@ const HeroSection = () => {
             </div>
           </div>
           
-          {/* Newsletter Signup */}
-          <form onSubmit={handleNewsletterSignup} className="flex flex-col sm:flex-row gap-3 mb-4">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email address"
-              className="flex-1 px-4 py-3 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              required
-            />
-            <button 
-              type="submit"
-              disabled={loading}
-              className="bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-300 text-black font-bold text-lg px-8 py-3 rounded-lg shadow-lg transition-colors duration-300"
-            >
-              {loading ? "Signing Up..." : "Get the Free Newsletter"}
-            </button>
-          </form>
+          {/* Newsletter Signup (swapped to dedicated component) */}
+          <div className="max-w-xl">
+            <NewsletterSignup />
+          </div>
           
-          <p className="text-sm text-white/80">
+          <p className="text-sm text-white/80 mt-4">
             Join thousands of neighbors building better communities!
           </p>
         </div>

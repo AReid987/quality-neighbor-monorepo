@@ -9,6 +9,7 @@
       "outputs": [
         "apps/qn-platform/.next/**",
         "apps/qn-dashboard/.next/**",
+        "apps/qn-business/.next/**",
         "apps/hartland-ranch-insider/dist/**",
         "dist/**"
       ]

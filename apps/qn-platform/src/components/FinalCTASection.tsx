@@ -1,46 +1,11 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { NewsletterSignup } from "@/components/newsletter/NewsletterSignup";
 
 const FinalCTASection = () => {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { signUp, user, qnUser } = useAuth();
-
-  const handleNewsletterSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      alert("Please enter your email address to sign up for the newsletter.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Generate a temporary password for newsletter signup
-      const tempPassword = Math.random().toString(36).slice(-8) + "!1A";
-      
-      const { error } = await signUp(email, tempPassword, {
-        firstName: "Newsletter",
-        lastName: "Subscriber", 
-        location: "Community",
-        role: "Resident"
-      });
-
-      if (error) {
-        alert(`Signup failed: ${error.message || error}`);
-      } else {
-        window.location.href = "/dashboard";
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-      alert("Signup failed. Please try again.");
-    } finally {
-      setLoading(false);
-      setEmail("");
-    }
-  };
+  const { user, qnUser } = useAuth();
 
   if (user && qnUser) {
     return (
@@ -86,27 +51,13 @@ const FinalCTASection = () => {
           </div>
         </div>
         
-        {/* Newsletter Signup Form */}
-        <form onSubmit={handleNewsletterSignup} className="max-w-md mx-auto flex flex-col sm:flex-row gap-3 mb-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email address"
-            className="flex-1 px-4 py-3 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            required
-          />
-          <button 
-            type="submit"
-            disabled={loading}
-            className="bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-300 text-black font-bold text-lg px-8 py-3 rounded-lg shadow-lg transition-colors duration-300"
-          >
-            {loading ? "Signing Up..." : "Get the Free Newsletter"}
-          </button>
-        </form>
+        {/* Newsletter Signup (swapped to dedicated component) */}
+        <div className="max-w-md mx-auto">
+          <NewsletterSignup />
+        </div>
         
         {/* Microcopy */}
-        <p className="text-sm text-white opacity-80">
+        <p className="text-sm text-white opacity-80 mt-4">
           100% free. Unsubscribe anytime with one click.
         </p>
       </div>

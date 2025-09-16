@@ -5,8 +5,8 @@ const Footer = () => {
         <div className="text-center">
           <p className="text-sm text-white/70">
             &copy; 2025 Quality Neighbor | 
-            <a href="#" className="hover:text-white transition-colors ml-1">Privacy Policy</a> | 
-            <a href="#" className="hover:text-white transition-colors ml-1">Terms of Service</a>
+            <a href="/privacy" className="hover:text-white transition-colors ml-1">Privacy Policy</a> | 
+            <a href="/terms" className="hover:text-white transition-colors ml-1">Terms of Service</a>
           </p>
         </div>
       </div>
