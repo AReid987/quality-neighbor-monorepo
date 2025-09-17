@@ -105,9 +105,57 @@ export type Database = {
           updated_at?: string
         }
       }
+      qn_advertisements: {
+        Row: {
+          ad_id: string
+          business_id: string
+          campaign_name: string
+          ad_creative_url: string
+          ad_copy: string
+          status: 'Active' | 'Paused' | 'Pending Review' | 'Completed'
+          start_date: string
+          end_date: string
+          impressions: number
+          clicks: number
+          conversions: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          ad_id?: string
+          business_id: string
+          campaign_name: string
+          ad_creative_url: string
+          ad_copy: string
+          status: 'Active' | 'Paused' | 'Pending Review' | 'Completed'
+          start_date: string
+          end_date: string
+          impressions?: number
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          business_id?: string
+          campaign_name?: string
+          ad_creative_url?: string
+          ad_copy?: string
+          status?: 'Active' | 'Paused' | 'Pending Review' | 'Completed'
+          start_date?: string
+          end_date?: string
+          impressions?: number
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
 
 export type QNUser = Database['public']['Tables']['qn_users']['Row']
 export type QNBusiness = Database['public']['Tables']['qn_businesses']['Row']
+export type QNAdvertisement = Database['public']['Tables']['qn_advertisements']['Row']

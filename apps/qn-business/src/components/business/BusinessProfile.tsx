@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, QNBusiness } from '@/lib/supabase'
+import { Card, CardContent, CardHeader, CardTitle, Input, Label, Button } from '@qn/ui'
 
 const AD_TIERS = ['Bronze', 'Silver', 'Gold'] as const
 
@@ -135,12 +136,12 @@ export function BusinessProfile() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="mx-auto max-w-2xl">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">
           {existing ? 'Edit Business Profile' : 'Create Business Profile'}
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="mt-2 text-gray-600">
           {qnUser ? `Signed in as ${qnUser.first_name} ${qnUser.last_name}` : ''}
         </p>
       </div>
@@ -157,109 +158,113 @@ export function BusinessProfile() {
         </div>
       )}
 
-      <div className="space-y-5 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Business Name</label>
-          <input
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.business_name}
-            onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-            placeholder="Hartland Ranch Bakery"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Business Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Contact Email</label>
-            <input
-              type="email"
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.contact_email}
-              onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
-              placeholder="owner@business.com"
+            <Label className="text-sm text-gray-700">Business Name</Label>
+            <Input
+              className="mt-2"
+              value={formData.business_name}
+              onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+              placeholder="Hartland Ranch Bakery"
               required
             />
           </div>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <Label className="text-sm text-gray-700">Contact Email</Label>
+              <Input
+                type="email"
+                className="mt-2"
+                value={formData.contact_email}
+                onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                placeholder="owner@business.com"
+                required
+              />
+            </div>
+            <div>
+              <Label className="text-sm text-gray-700">Contact Phone</Label>
+              <Input
+                className="mt-2"
+                value={formData.contact_phone}
+                onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                placeholder="(512) 555-1234"
+                required
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
-            <input
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.contact_phone}
-              onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
-              placeholder="(512) 555-1234"
+            <Label className="text-sm text-gray-700">Address</Label>
+            <Input
+              className="mt-2"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="123 Main St, Austin, TX"
               required
             />
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Address</label>
-          <input
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            placeholder="123 Main St, Austin, TX"
-            required
-          />
-        </div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <Label className="text-sm text-gray-700">Category</Label>
+              <Input
+                className="mt-2"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                placeholder="Bakery, Auto Repair, Boutique..."
+                required
+              />
+            </div>
+            <div>
+              <Label className="text-sm text-gray-700">Ad Package Tier</Label>
+              <select
+                className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.ad_package_tier}
+                onChange={(e) => setFormData({ ...formData, ad_package_tier: e.target.value as 'Bronze' | 'Silver' | 'Gold' })}
+              >
+                {AD_TIERS.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
-            <input
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              placeholder="Bakery, Auto Repair, Boutique..."
-              required
+            <Label className="text-sm text-gray-700">Description</Label>
+            <textarea
+              className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={4}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="What makes your business special?"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Ad Package Tier</label>
-            <select
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.ad_package_tier}
-              onChange={(e) => setFormData({ ...formData, ad_package_tier: e.target.value as 'Bronze' | 'Silver' | 'Gold' })}
+            <Label className="text-sm text-gray-700">Logo URL</Label>
+            <Input
+              className="mt-2"
+              value={formData.logo_url}
+              onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+              placeholder="https://example.com/logo.png"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              onClick={handleSave}
+              disabled={saving || !formData.business_name || !formData.contact_email || !formData.contact_phone || !formData.address || !formData.category}
             >
-              {AD_TIERS.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              {saving ? 'Saving...' : (existing ? 'Save Changes' : 'Create Profile')}
+            </Button>
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <textarea
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={4}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="What makes your business special?"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Logo URL</label>
-          <input
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.logo_url}
-            onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-            placeholder="https://example.com/logo.png"
-          />
-        </div>
-
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            onClick={handleSave}
-            disabled={saving || !formData.business_name || !formData.contact_email || !formData.contact_phone || !formData.address || !formData.category}
-            className="rounded-md bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {saving ? 'Saving...' : (existing ? 'Save Changes' : 'Create Profile')}
-          </button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
