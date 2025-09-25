@@ -1,15 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { supabase, QNBusiness, QNAdvertisement } from '@/lib/supabase'
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge, Button } from '@qn/ui'
+import { CreateCampaignForm } from '@/components/campaigns/CreateCampaignForm'
 
 export default function CampaignsPage() {
   const { user, qnUser, loading } = useAuth()
   const [biz, setBiz] = useState<QNBusiness | null>(null)
   const [campaigns, setCampaigns] = useState<QNAdvertisement[]>([])
   const [fetching, setFetching] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const canToggle = useMemo(() => (status: QNAdvertisement['status']) => status === 'Active' || status === 'Paused', [])
 
   useEffect(() => {
     if (!loading && (!user || !qnUser)) {
@@ -49,6 +53,25 @@ export default function CampaignsPage() {
     if (user) void load()
   }, [user?.id])
 
+  const toggleStatus = async (ad: QNAdvertisement) => {
+    if (!canToggle(ad.status)) return
+    const next = ad.status === 'Active' ? 'Paused' : 'Active'
+    const { error } = await supabase
+      .from('qn_advertisements')
+      .update({ status: next })
+      .eq('ad_id', ad.ad_id)
+    if (!error) {
+      setCampaigns(prev => prev.map(c => c.ad_id === ad.ad_id ? { ...c, status: next } : c))
+    }
+  }
+
+  const badgeClass = (status: QNAdvertisement['status']) => {
+    if (status === 'Active') return 'bg-green-100 text-green-700'
+    if (status === 'Paused') return 'bg-yellow-100 text-yellow-700'
+    if (status === 'Pending Review') return 'bg-blue-100 text-blue-700'
+    return 'bg-gray-100 text-gray-700'
+    }
+
   if (loading || !user || !qnUser) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -62,12 +85,9 @@ export default function CampaignsPage() {
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">Campaigns</h2>
-          <a
-            href="#"
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            New Campaign (Coming Soon)
-          </a>
+          <Button onClick={() => setShowForm((s) => !s)}>
+            {showForm ? 'Close' : 'New Campaign'}
+          </Button>
         </div>
 
         {!biz && !fetching && (
@@ -76,59 +96,77 @@ export default function CampaignsPage() {
           </div>
         )}
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr className="text-left text-sm text-gray-600">
-                <th className="px-3 py-2">Campaign</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Dates</th>
-                <th className="px-3 py-2 text-right">Impressions</th>
-                <th className="px-3 py-2 text-right">Clicks</th>
-                <th className="px-3 py-2 text-right">Conversions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+        {showForm && (
+          <div className="mt-6">
+            <CreateCampaignForm
+              businessId={biz?.business_id}
+              onCreated={(ad) => {
+                setCampaigns(prev => [ad, ...prev])
+                setShowForm(false)
+              }}
+            />
+          </div>
+        )}
+
+        <div className="mt-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Campaign</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Dates</TableHead>
+                <TableHead className="text-right">Impressions</TableHead>
+                <TableHead className="text-right">Clicks</TableHead>
+                <TableHead className="text-right">Conversions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {fetching ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-sm text-gray-600">
+                <TableRow>
+                  <TableCell colSpan={7} className="py-6 text-center text-sm text-gray-600">
                     Loading campaigns…
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : campaigns.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-sm text-gray-600">
+                <TableRow>
+                  <TableCell colSpan={7} className="py-6 text-center text-sm text-gray-600">
                     No campaigns yet.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 campaigns.map((c) => (
-                  <tr key={c.ad_id} className="text-sm text-gray-800">
-                    <td className="px-3 py-2">
+                  <TableRow key={c.ad_id}>
+                    <TableCell>
                       <div className="font-medium text-gray-900">{c.campaign_name}</div>
-                      <div className="text-xs text-gray-500 truncate max-w-[28rem]">{c.ad_copy}</div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
-                        c.status === 'Active' ? 'bg-green-100 text-green-700' :
-                        c.status === 'Paused' ? 'bg-yellow-100 text-yellow-700' :
-                        c.status === 'Pending Review' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div>{new Date(c.start_date).toLocaleDateString()} - {new Date(c.end_date).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-3 py-2 text-right">{(c.impressions || 0).toLocaleString()}</td>
-                    <td className="px-3 py-2 text-right">{(c.clicks || 0).toLocaleString()}</td>
-                    <td className="px-3 py-2 text-right">{(c.conversions || 0).toLocaleString()}</td>
-                  </tr>
+                      <div className="max-w-[28rem] truncate text-xs text-gray-500">{c.ad_copy}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={badgeClass(c.status)}>{c.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(c.start_date).toLocaleDateString()} - {new Date(c.end_date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">{(c.impressions || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{(c.clicks || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{(c.conversions || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">
+                      {canToggle(c.status) ? (
+                        <Button
+                          variant="secondary"
+                          onClick={() => toggleStatus(c)}
+                        >
+                          {c.status === 'Active' ? 'Pause' : 'Activate'}
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-gray-500">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </DashboardLayout>
