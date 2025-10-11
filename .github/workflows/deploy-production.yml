@@ -25,7 +25,7 @@ on:
 
 env:
   NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  PNPM_VERSION: '10.13.1'
 
 jobs:
   # 🧪 Pre-deployment Validation
@@ -154,7 +154,6 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets[format('VERCEL_PROJECT_ID_{0}', upper(replace(matrix.app, '-', '_')))] }}
           vercel-args: '--prod'
-          working-directory: apps/${{ matrix.app }}
           scope: ${{ secrets.VERCEL_ORG_ID }}
 
       - name: 🔗 Get Production URL

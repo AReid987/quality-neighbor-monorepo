@@ -38,4 +38,3 @@ yarn-error.log*
 *.pem
 
 # pnpm
-pnpm-lock.yaml
