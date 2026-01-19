@@ -19,6 +19,6 @@
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
     "tsx": "^4.6.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }
