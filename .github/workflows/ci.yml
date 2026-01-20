@@ -1,14 +1,40 @@
 name: Quality Neighbor CI/CD Pipeline
 
+permissions:
+  # Read the baseline artifact in order to perform
+  # the AppMap comparison.
+  actions: read
+
+  # Commit the AppMap configuration.
+  # If the EndBug/add-and-commit is removed,
+  # this can be changed to 'read'.
+  contents: write
+
+  # Add check annotations to the source code when
+  # a problem is detected.
+  checks: write
+
+  # Add a comment to the pull request.
+  pull-requests: write
 on:
-  push:
-    branches: [ main, develop ]
+  # Run on pull request, so that the PR can be analyzed.
   pull_request:
-    branches: [ main, develop ]
+
+  # Run on merge to the base branch, so that the baseline
+  # AppMap archive can be brought up-to-date.
+  # If your base branch is not 'main', (e.g. 'master', 'develop'),
+  # change this accordingly.
+  push:
+    branches:
+      - main
+
+  # Run weekly, so that the baseline AppMap artifact does not expire.
+  schedule:
+    - cron: '0 0 * * 0'
 
 env:
-  NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  NODE_VERSION: "18"
+  PNPM_VERSION: "10.13.1"
 
 jobs:
   # Job 1: Install dependencies and cache
@@ -20,6 +46,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Checkout pull request head so that a commit can be made
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,7 +56,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -36,7 +65,7 @@ jobs:
         run: echo "key=pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ steps.cache-key.outputs.key }}
@@ -61,7 +90,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -98,7 +127,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4n
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -124,11 +153,24 @@ jobs:
           AUTH0_CLIENT_SECRET: dummy_client_secret
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.app }}-build
           path: apps/${{ matrix.app }}/.next/
           retention-days: 1
+
+      # Begin install-action snippet
+      #
+      - name: Install AppMap tools
+        id: install-appmap
+        uses: getappmap/install-action@v1
+        with:
+          project-type: npm
+          build-patch-file: false
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+      #
+      # End install-action snippet
 
   # Job 4: Run tests
   test:
@@ -145,7 +187,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -163,6 +205,11 @@ jobs:
         env:
           CI: true
 
+      - name: Archive AppMaps
+        uses: getappmap/archive-action@v1
+        with:
+          revision: ${{ github.event.pull_request.base.sha }}
+
   # Job 5: Security audit
   security:
     name: Security Audit
@@ -178,7 +225,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -206,7 +253,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: qn-platform-build
           path: apps/qn-platform/.next/
@@ -219,6 +266,9 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
           working-directory: apps/qn-platform
           scope: ${{ secrets.VERCEL_ORG_ID }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
 
   # Job 7: Deploy to production (on main branch)
   deploy-production:
@@ -245,7 +295,10 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PRODUCTION }}
           working-directory: apps/qn-platform
           scope: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-args: '--prod'
+          vercel-args: "--prod"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
 
   # Job 8: Database migrations (production only)
   migrate-database:
